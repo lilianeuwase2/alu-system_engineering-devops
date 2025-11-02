@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# This script connects to the Holberton server using the private key located at ~/.ssh/school.
+
+# Replace the IP with your actual server IP: 54.210.92.175
+# The -i flag specifies the path to the identity (private key) file.
+# The user is specified as part of the host argument: ubuntu@<IP>.
+
+ssh -i ~/.ssh/school ubuntu@54.210.92.175
