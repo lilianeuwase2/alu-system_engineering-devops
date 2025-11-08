@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
-# commands to install nginx on web server yep
+# This script installs and configures Nginx to serve a custom page.
 
-apt-get update
-apt-get install -y nginx
+# Update package information
+sudo apt-get update
 
-mkdir /etc/nginx/html
-touch /etc/nginx/html/index.html
-echo "Holberton School" >/etc/nginx/html/index.html
-printf %s "server {
-     listen      80 default_server;
-     listen      [::]:80 default_server;
-     root        /etc/nginx/html;
-     index       index.html index.htm;
-}
-" >/etc/nginx/sites-available/default
+# Install Nginx
+# -y answers "yes" to all prompts
+sudo apt-get install -y nginx
 
-service nginx restart
+# Create the custom HTML content
+# We use printf and tee with sudo to write to the protected file
+printf "Holberton School\n" | sudo tee /var/www/html/index.html
+
+# Restart Nginx using the service command (as systemctl is forbidden)
+# This ensures Nginx is started and serves the new file
+sudo service nginx restart
+
+exit 0
+
+
+
+
