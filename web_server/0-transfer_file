@@ -1,4 +1,4 @@
- #!/usr/bin/env bash
+#!/usr/bin/env bash
 # transfer file to server
 
 # Check if all 4 parameters are provided
