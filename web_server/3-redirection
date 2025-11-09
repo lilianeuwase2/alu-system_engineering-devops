@@ -6,21 +6,39 @@
 sudo apt-get update -y
 sudo apt-get install -y nginx
 
-# 2. Define the redirection rule
-# We will insert this block after the 'server_name _;' line
-# The location block uses a prefix match 'location /redirect_me'
-# which will correctly handle both /redirect_me and /redirect_me/
-# Note the escaped slashes (\) for the URL, which sed requires.
-REDIRECT_RULE="\\\n\\\n    location /redirect_me {\\\n        return 301 https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4;\\\n    }"
+# 2. Define the new configuration file content
+# We use 'location /redirect_me' (a prefix match)
+# This ensures it catches both /redirect_me AND /redirect_me/
+# Note: We must escape the '$' in try_files for the 'echo' command
+CONFIG_CONTENT="server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-# 3. Use sed to insert the rule into the default config file
-# This command appends (a) the REDIRECT_RULE after the line matching 'server_name _;'
-sudo sed -i "/server_name _;/a ${REDIRECT_RULE}" /etc/nginx/sites-available/default
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
 
-# 4. Test Nginx configuration and restart the service
+    server_name _;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    # Redirect /redirect_me
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+}
+"
+
+# 3. Overwrite the default configuration file
+# Using 'echo' and 'tee' is a safe way to write to a protected file
+echo "$CONFIG_CONTENT" | sudo tee /etc/nginx/sites-available/default > /dev/null
+
+# 4. Test configuration and restart Nginx
 if sudo nginx -t; then
     sudo service nginx restart
+    echo "Nginx configured and restarted successfully."
 else
-    echo "Nginx configuration test failed. Exiting." >&2
+    echo "Nginx configuration test failed. Please check the config file." >&2
     exit 1
 fi
