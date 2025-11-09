@@ -1,35 +1,42 @@
 #!/usr/bin/env bash
+# Script to install Nginx and configure a 301 redirect from /redirect_me
 
-# This script configures an Nginx server on a brand new Ubuntu machine
-# to redirect /redirect_me to a specific URL using a 301 Moved Permanently directive.
+# Update package list and install Nginx if not installed
+sudo apt update
+sudo apt install -y nginx
 
-# 1. Install Nginx (based on 1-install_nginx_web_server)
-echo "Updating package list and installing Nginx..."
-sudo apt-get update -y
-sudo apt-get install -y nginx
+# Backup the default configuration file
+sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
 
-# 2. Configure the 301 Redirection
-# The redirection rule is added to the default configuration file.
-# The 'sed' command is used to append the new multi-line 'location' block
-# immediately after the 'server_name _;' line within the server block.
+# Configure the 301 redirect in Nginx
+sudo bash -c 'cat > /etc/nginx/sites-available/default' <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-REDIRECT_URL="https://www.youtube.com/watch?v=QH2-TGUlwu4"
-NGINX_CONF="/etc/nginx/sites-available/default"
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
 
-echo "Adding 301 redirection for /redirect_me to Nginx configuration..."
-# The '\' at the end of each line allows multiline insertion with the 'a' (append) command.
-# Spaces are used for proper indentation.
-sudo sed -i "/server_name _;/a\
-    location /redirect_me {\
-        return 301 ${REDIRECT_URL};\
-    }" ${NGINX_CONF}
+    server_name _;
 
-# 3. Test Configuration and Restart Nginx
-echo "Testing Nginx configuration and restarting service..."
-if sudo nginx -t; then
-    sudo service nginx restart
-    echo "Nginx configured and restarted successfully."
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    # Redirect /redirect_me to the specified URL with a 301 Moved Permanently status
+    location = /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4; 
+    }
+}
+EOF
+
+# Test Nginx configuration for syntax errors
+sudo nginx -t
+
+# If the configuration test passed, restart Nginx to apply changes
+if [ $? -eq 0 ]; then
+    sudo service restart nginx
+    echo "Nginx installed and /redirect_me configured to redirect with a 301 status."
 else
-    echo "Nginx configuration test failed. Please check the config file."
-    exit 1
+    echo "Nginx configuration test failed. Please check the configuration file."
 fi
