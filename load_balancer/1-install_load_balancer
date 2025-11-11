@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Installs and configures HAproxy to load balance traffic between two web servers
+
+# IPs for the web servers provided in the project
+WEB01_IP="98.94.30.103"
+WEB02_IP="98.94.41.43"
+
+# Update package lists and install haproxy
+sudo apt-get -y update
+sudo apt-get -y install haproxy
+
+# Enable HAproxy to be managed by init script
+# This edits the /etc/default/haproxy file
+sudo sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
+
+# Define the configuration block to add
+CONFIG_BLOCK="
+frontend http_front
+    bind *:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    server web-01 ${WEB01_IP}:80 check
+    server web-02 ${WEB02_IP}:80 check
+"
+
+# Append the configuration block to haproxy.cfg
+echo "$CONFIG_BLOCK" | sudo tee -a /etc/haproxy/haproxy.cfg
+
+# Restart HAproxy to apply changes
+sudo service haproxy restart
