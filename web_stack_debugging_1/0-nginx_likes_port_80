@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Update package info, install Nginx, and ensure it is started/listening on port 80
+# Install Nginx, ensure it listens on port 80, and restart the service
 sudo apt-get update -y
 sudo apt-get install nginx -y
-sudo service nginx start
+sudo sed -i 's/8080/80/g' /etc/nginx/sites-available/default
+sudo service nginx restart
