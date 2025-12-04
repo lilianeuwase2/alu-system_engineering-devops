@@ -23,7 +23,7 @@ sudo sed -i "/server_name _;/a\
     }" ${NGINX_CONF}
 
 # 3. Test Configuration and Restart Nginx
-echo "Testing Nginx configuration and restarting service..."
+ho "Testing Nginx configuration and restarting service..."
 if sudo nginx -t; then
     sudo service nginx restart
 else
